@@ -96,9 +96,9 @@ ODI_PGD_kwargs = {
     'ODI_alpha': random_chooser([.16, 0.25, 0.33, 0.41, .5]),
     'alpha': random_chooser([.16, 0.25, 0.33, 0.41, .5]),
     'model': model,
-    'training': False,
+    'training': True,
     'train_lambda': 0.12,
-    'train_attack_on': False,
+    'train_attack_on': True,
     'device': device
 }
 #%%
@@ -110,9 +110,9 @@ ODI_PGD_ad_kwargs = {
     'ODI_alpha': random_chooser([.16, 0.25, 0.33, 0.41, .5]),
     'alpha': random_chooser([.16, 0.25, 0.33, 0.41, .5]),
     'model': model,
-    'training': False,
+    'training': True,
     'train_lambda': 0.13,
-    'train_attack_on': False,
+    'train_attack_on': True,
     'device': device
 }
 

@@ -9,6 +9,7 @@ import numpy as np
 from torch.autograd import Variable
 import matplotlib.pyplot as plt
 import no_net
+from attacker import attacker
 from FGSM import FGSM_attacker
 from PGD import PGD_attacker
 from random_chooser import  random_chooser
@@ -107,13 +108,13 @@ def train(epoch1):
         data.requires_grad = True
         x = 2
         if x == 1:
-            data_fgsm = fgsm_attacker.run_attack(data, target)
+            data_fgsm, _ = fgsm_attacker.run_attack(data, target)
         # print(data_fgsm.shape)
             target_fgsm = data
             target_fgsm.requires_grad = False
             loss = new(data_fgsm, target_fgsm)
         else:
-            data_pgd = pgd_attacker.run_attack(data, target)
+            data_pgd, _ = pgd_attacker.run_attack(data, target)
             target_pgd = data
             target_pgd.requires_grad = False
             loss = new(data_pgd, target_pgd)

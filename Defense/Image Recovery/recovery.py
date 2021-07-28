@@ -6,6 +6,7 @@ from torchvision.transforms import Normalize
 from torchvision.transforms import Compose
 from torch.autograd import Variable
 import matplotlib.pyplot as plt
+from attacker import attacker
 from PGD import PGD_attacker
 from train_recovery import train
 from FGSM import FGSM_attacker
@@ -78,8 +79,8 @@ def test_fgsm():
         data, target = data.to(device), target.to(device)
         cnt += 1
         data.requires_grad = True
-        data_fgsm = fgsm_attacker.run_attack(data, target)
-        data_fgsm = Variable(data_fgsm, requires_grad=False)
+        data_fgsm, _ = fgsm_attacker.run_attack(data, target)
+        data_fgsm, _ = Variable(data_fgsm, requires_grad=False)
         plt.imshow(data_fgsm[0][0], cmap='gray', interpolation='none')
         plt.xticks([])
         plt.yticks([])
@@ -115,7 +116,7 @@ def test_pgd():
         data, target = data.to(device), target.to(device)
         cnt += 1
         data.requires_grad = True
-        data_pgd = pgd_attacker.run_attack(data, target)
+        data_pgd, _ = pgd_attacker.run_attack(data, target)
         data_new = model(data_pgd)
         model.zero_grad()
         output = net(data_pgd)

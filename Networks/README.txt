@@ -1,0 +1,1 @@
+MyNet.py is a slightly modified Lenet-5.

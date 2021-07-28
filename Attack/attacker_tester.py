@@ -109,7 +109,7 @@ Deep_Fool_kwargs = {
     'max_iter': random_chooser([2, 4, 6, 8]),
     'model': model,
     'epsilon': random_chooser([1., 1.5, 2.0, 2.5, 3.0]),
-    'eps_control': False,
+    'eps_control': True,
     'training': False,
     'train_attack_on': False,
     'device': device

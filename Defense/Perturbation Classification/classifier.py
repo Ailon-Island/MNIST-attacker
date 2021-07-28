@@ -6,7 +6,9 @@ from torch.utils.data import DataLoader
 import torch.nn.functional as F
 import yes_net
 from FGSM import FGSM_attacker
-from Homework.大作业.还原神经网络.PGD import PGD_attacker
+from PGD import PGD_attacker
+from PGD_ad import PGD_ad_attacker
+from Deep_Fool import Deep_Fool_attacker
 from noise_MNIST_dataset import noise_classifier_MNIST
 from random_chooser import random_chooser
 
@@ -39,7 +41,28 @@ PGD_kwargs = {
     'train_attack_on': False,
     'device': device
 }
-
+#%%
+# PGD_ad configs
+PGD_ad_kwargs = {
+    'k': random_chooser([5, 10, 15, 20]),
+    'epsilon': random_chooser([0.1, 0.15, 0.2, 0.25, 0.3]),
+    'alpha': random_chooser([0.03, 0.05, 0.07, 0.08, 0.1]),
+    'model': torch.load('Lenet5.pth'),
+    'training': False,
+    'train_attack_on': False,
+    'device': device
+}
+#%%
+# Deep Fool configs
+Deep_Fool_kwargs = {
+    'max_iter': random_chooser([2, 4, 8, 12, 16]),
+    'model': torch.load('Lenet5.pth'),
+    'epsilon': random_chooser([0.1, 0.15, 0.2, 0.25, 0.3]),
+    'eps_control': True,
+    'training': False,
+    'train_attack_on': False,
+    'device': device
+}
 #%%
 
 testing_data = datasets.MNIST(
@@ -49,7 +72,7 @@ testing_data = datasets.MNIST(
     transform=ToTensor()
 )
 
-training_data = noise_classifier_MNIST(FGSM_kwargs.copy(), PGD_kwargs.copy())
+training_data = noise_classifier_MNIST(FGSM_kwargs.copy(), PGD_kwargs.copy(), PGD_ad_kwargs, Deep_Fool_kwargs)
 
 #%%
 
@@ -65,6 +88,8 @@ test_data = DataLoader(testing_data, batch_size=batch_size_test, shuffle=True, n
 #%%
 fgsm_attacker = FGSM_attacker(**FGSM_kwargs)
 pgd_attacker = PGD_attacker(**PGD_kwargs)
+pgd_ad_attacker = PGD_ad_attacker(**PGD_ad_kwargs)
+deep_fool_attacker = Deep_Fool_attacker(**Deep_Fool_kwargs)
 #%%
 # 优化器设置
 optimizer = torch.optim.RMSprop(model.parameters(), lr=learning_rate, alpha=0.9)
@@ -105,9 +130,13 @@ def test():
         data.requires_grad = True
         data_fgsm = fgsm_attacker.run_attack(data, target)
         data_pgd = pgd_attacker.run_attack(data, target)
+        data_pgd_ad = pgd_ad_attacker.run_attack(data, target)
+        data_deep_fool = deep_fool_attacker.run_attack(data, target)
         target = torch.tensor([0 for i in range(batch_size_test)]).to(device)
         target_fgsm = torch.tensor([1 for i in range(batch_size_test)]).to(device)
         target_pgd = torch.tensor([2 for i in range(batch_size_test)]).to(device)
+        target_pgd_ad = torch.tensor([3 for i in range(batch_size_test)]).to(device)
+        target_deep_fool = torch.tensor([4 for i in range(batch_size_test)]).to(device)
         model.zero_grad()
         output = model(data)
         pred = output.data.max(1, keepdim=True)[1]
@@ -115,9 +144,15 @@ def test():
         pred_fgsm = output_fgsm.data.max(1, keepdim=True)[1]
         output_pgd = model(data_pgd)
         pred_pgd = output_pgd.data.max(1, keepdim=True)[1]
+        output_pgd_ad = model(data_pgd_ad)
+        pred_pgd_ad = output_pgd_ad.data.max(1, keepdim=True)[1]
+        output_deep_fool = model(data_deep_fool)
+        pred_deep_fool = output_deep_fool.data.max(1, keepdim=True)[1]
         correct += pred.eq(target.data.view_as(pred)).sum()
         correct += pred_fgsm.eq(target_fgsm.data.view_as(pred_fgsm)).sum()
         correct += pred_pgd.eq(target_pgd.data.view_as(pred_pgd)).sum()
+        correct += pred_pgd_ad.eq(target_pgd_ad.data.view_as(pred_pgd_ad)).sum()
+        correct += pred_deep_fool.eq(target_deep_fool.data.view_as(pred_deep_fool)).sum()
         if cnt * test_data.batch_size % 1000 == 0:
             print("Attacking: {}/{} ({:.0f}%)\tAccuracy: {}/{} ({:.0f}%))".format(
                 3 * cnt * test_data.batch_size, 3 * len(test_data.dataset),
